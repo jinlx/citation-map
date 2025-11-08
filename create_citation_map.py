@@ -6,6 +6,15 @@ import matplotlib.patheffects as PathEffects
 import numpy as np
 import os
 
+try:
+    from adjustText import adjust_text
+except ImportError:
+    print("Info: 'adjustText' library not found. "
+          "To use 'adjust_labels=True', please install it: pip install adjusttext")
+    def adjust_text(texts, **kwargs):
+        print("Warning: 'adjustText' not installed. Skipping label adjustment.")
+        pass
+
 def create_citation_map(
     csv_filepath: str,
     output_filename: str = 'citation_map.png',
@@ -31,6 +40,8 @@ def create_citation_map(
     # --- Other Options ---
     show_labels: bool = False,
     show_counts: bool = False,
+    adjust_labels: bool = False,
+    label_top_n: int = None,
     show_legend: bool = False, # Show simple categorical legend
     base_color: str = '#EEEEEE',
     border_color: str = '#FFFFFF'
@@ -189,9 +200,17 @@ def create_citation_map(
     if show_labels or show_pins or show_counts:
         if not cited_geometries.empty:
             # Get colormap for pins if needed
+            texts_to_adjust = [] 
             if pin_scale_color:
                 pin_cmap_obj = plt.get_cmap(pin_cmap)
                 
+            # Determine which geometries to label (top N filtering)
+            if label_top_n is not None and label_top_n < len(cited_geometries):
+                min_count_for_top_n = cited_geometries['count'].nlargest(label_top_n).min()
+                geometries_to_label = cited_geometries[cited_geometries['count'] >= min_count_for_top_n]
+            else:
+                geometries_to_label = cited_geometries
+
             # Sort by normalized_value descending so largest pins are drawn first
             sorted_geometries = cited_geometries.sort_values(by='normalized_value', ascending=False)
             
@@ -226,7 +245,12 @@ def create_citation_map(
                         linewidth=0.5,
                         zorder=10 # Draw pins above map but below labels
                     )
-                
+            
+            # label top N 
+            for _, row in geometries_to_label.iterrows():
+                centroid = row.geometry.centroid
+                if centroid.is_empty:
+                    continue
                 # --- labels/counts ---
                 if show_labels or show_counts:
                     # Determine text to display
@@ -241,7 +265,7 @@ def create_citation_map(
                             label_text = str(row['count']) # Use raw count
 
                     if label_text: # Ensure we have something to plot
-                        ax.annotate(
+                        text_obj = ax.annotate(
                                 text=label_text,
                             xy=(centroid.x, centroid.y),
                                 ha='center', 
@@ -253,6 +277,24 @@ def create_citation_map(
                             ],
                                 zorder=11 # Draw labels on top of pins
                         )
+                        texts_to_adjust.append(text_obj)
+
+            if adjust_labels and texts_to_adjust:
+                print("Adjusting labels to avoid overlap...")
+                adjust_text(
+                    texts_to_adjust,
+                    ax=ax,
+                    # force_text=(0.2, 0.1),
+                    # force_pull=(0.5, 0.5),
+                    arrowprops=dict(
+                        arrowstyle='-', 
+                        color='gray', 
+                        lw=0.5,
+                        alpha=0.7
+                    ),
+                    lims=(*ax.get_xlim(), *ax.get_ylim()),
+                )
+
 
     # 6e. Save plot
     plt.tight_layout()

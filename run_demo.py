@@ -75,6 +75,7 @@ else:
         fill_cmap='Blues',
         show_labels=True,
         show_legend=True,
+        adjust_labels=True,
     )
 
     # --- Example 4: Heatmap Mode (Blue) with Labels & Counts ---
@@ -88,6 +89,7 @@ else:
         show_labels=True,
         show_legend=True,
         show_counts=True,
+        adjust_labels=True,
     )
     
     print("\nAll map examples generated!")

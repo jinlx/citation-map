@@ -209,6 +209,8 @@ Here are all the available parameters for `create_citation_map`:
 | **Other Options** | | | |
 | `show_labels` | `bool` | `False` | If True, add country name labels. |
 | `show_counts` | `bool` | `False` | If True, add citation counts. |
+| `adjust_labels` | `bool` | `False` | If True, adjust labels to avoid overlapping. |
+| `label_top_n` | `int` | `None` | Only shows labels for the top N most-cited countries. |
 | `show_legend` | `bool` | `False` | If True, show a simple 'Citing' vs 'Not Citing' legend. |
 | `base_color` | `str` | `'#EEEEEE'` | Color for non-citing countries. |
 | `border_color` | `str` | `'#FFFFFF'` | Color for country borders. |
