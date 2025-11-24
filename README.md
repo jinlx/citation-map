@@ -4,7 +4,7 @@ A Python toolkit to fetch and visualize the global distribution of your academic
 
 This repository contains two primary modules:
 
-1.  **`fetch_citation_info.py`**: A module to fetch all citations for an author (using their [ORCID iD](https://orcid.org/signin) or [OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID)) from the [OpenAlex](https://openalex.org/) API and save them as a CSV file. <u>Note: If you recently registered an ORCID, it might not be indexed by OpenAlex yet. In that case, it is recommended to use your OpenAlex ID, which you can quickly find by searching for your name or publication on [OpenAlex](https://openalex.org/)</u>.
+1.  **`fetch_citation_info.py`**: A module to fetch all citations for an author (using their [ORCID iD](https://orcid.org/signin) or [OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID)) from the [OpenAlex](https://openalex.org/) API and save them as a CSV file. <ins>Note: If you recently registered an ORCID, it might not be indexed by OpenAlex yet. In that case, it is recommended to use your [OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID), which you can quickly find by searching for your name or publication on OpenAlex</ins>.
 2.  **`create_citation_map.py`**: A module to generate highly customizable world maps from that CSV data.
 
 ![citation map](figs/map_ex_simple_green_with_pin.png)
