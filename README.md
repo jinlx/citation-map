@@ -4,8 +4,8 @@ A Python toolkit to fetch and visualize the global distribution of your academic
 
 This repository contains two primary modules:
 
-1.  **`fetch_citation_info.py`**: A module to fetch all citations for an author (using their [ORCID iD](https://orcid.org/signin) or [OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID)) from the [OpenAlex](https://openalex.org/) API and save them as a CSV file. <ins>Note: If you recently registered an ORCID, it might not be indexed by OpenAlex yet. In that case, it is recommended to use your [OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID), which you can quickly find by searching for your name or publication on OpenAlex</ins>.
-2.  **`create_citation_map.py`**: A module to generate highly customizable world maps from that CSV data.
+1.  **`citation_fetcher.py`**: A unified tool to fetch all citations for an author. It supports multiple input methods (**[OpenAlex ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID)**, **[ORCID](https://orcid.org/signin)**, **[Google Scholar ID](https://scholar.google.com)**, or **local CSV**) and **always generates an intermediate publication list** for your review.
+2.  **`create_citation_map.py`**: A module to generate highly customizable world maps from the fetched citation data.
 
 ![citation map](figs/map_ex_simple_green_with_pin.png)
 
@@ -24,31 +24,60 @@ This repository contains two primary modules:
 
 ## How to Use
 
-You can import these modules into your own Python script or a Jupyter Notebook. The easiest way to get started is to copy, paste, and edit the **`run_demo.py`** script in this repository.
-
-The workflow is two steps:
+The workflow is two steps: fetching data, then creating the map.
 
 ### Step 1: Fetch Your Citation Data
 
-Import and call the `get_citation_data` function. You must provide your ORCID iD. It is also highly recommended to provide your email address for polite API access.
+You can run `citation_fetcher.py` from the command line. It is highly recommended to provide your email address for polite API access.
 
-```python
-from fetch_citation_info import get_citation_data
-
-# -- Configuration --
-YOUR_ID = "0000-0002-XXXX-XXXX" or "A5XXXXXXXX"  # ORCID or OpenAlex ID
-YOUR_EMAIL = "your_email@example.com"
-CSV_FILENAME = "citation_info.csv"
-
-# -- Run the fetcher --
-get_citation_data(
-    author_id=YOUR_ID, 
-    output_csv=CSV_FILENAME, 
-    email=YOUR_EMAIL
-)
+#### Method A: Using ORCID (Recommended)
+* **Logic**: Fetches your publication list from the ORCID API.
+* **DOI Handling**: Uses the DOI provided by ORCID if available. If a DOI is missing, it attempts to find it via [Crossref](https://www.crossref.org/) based on the publication title.
+* **Intermediate Output**: Saves `publications_with_doi_orcid.csv`.
+```bash
+python citation_fetcher.py --orcid 0000-0002-XXXX-XXXX --email your_email@example.com
 ````
 
-This generates a `citation_info.csv` file with the following structure:
+#### Method B: Using Google Scholar ID
+
+  * **Logic**: Scrapes your publication list from Google Scholar using the [scholarly](https://pypi.org/project/scholarly/) library.
+  * **DOI Handling**: Since Google Scholar does not provide DOIs, **all** DOIs are retrieved via [Crossref](https://www.crossref.org/) based on the publication titles.
+  * **Intermediate Output**: Saves `publications_with_doi_scholar.csv`.
+
+```bash
+python citation_fetcher.py --scholar_id SCHOLAR_ID --email your_email@example.com
+```
+
+**[WARNING] Verify Your Data (Crossref Matching)**
+
+When using **ORCID** (for missing DOIs) or especially **Google Scholar** (for all DOIs), the tool uses the **Crossref API** to guess the DOI based on the paper title. While usually accurate, title matching is not 100% perfect.
+
+**Please check the generated intermediate file** (`publications_with_doi_*.csv`):
+
+1.  Open the CSV file.
+2.  Compare the **first column** (`my_publication`) with the **third column** (`Source`).
+3.  If the titles look completely different, the DOI in the second column is likely incorrect.
+4.  You can manually fix the DOI in this CSV and then run the tool again using **Method D**.
+
+#### Method C: Using OpenAlex Author ID (Recommended)
+  * **Logic**: Directly fetches your work list from [OpenAlex](https://openalex.org/). This is the fastest method if you already have your [OpenAlex author ID](https://help.openalex.org/hc/en-us/articles/27281068027031-How-do-I-find-my-OpenAlex-author-ID).
+  * **Intermediate Output**: Saves `publications_with_doi_openalex.csv` for your reference.
+
+```bash
+python citation_fetcher.py --openalex_id A5XXXXXXXX --email your_email@example.com
+```
+#### Method D: Using a Local CSV
+If you have a CSV file (e.g., `my_publications_with_doi.csv`) with a column named `DOI` or `doi`, you can use it directly.
+
+```bash
+python citation_fetcher.py --csv my_publications_with_doi.csv --email your_email@example.com
+```
+
+
+
+
+
+All options generate a `citation_info.csv` file (output filename can be changed via `--output`).
 
 | my\_publication | cited\_by\_title | cited\_by\_author | cited\_by\_institution | cited\_by\_country |
 | :--- | :--- | :--- | :--- | :--- |
@@ -63,7 +92,7 @@ This generates a `citation_info.csv` file with the following structure:
 
 ### Step 2: Create Your Citation Map
 
-Import and call the `create_citation_map` function. Point it to the CSV file you just created.
+Import and call the `create_citation_map` function in a Python script (e.g., `run_demo.py`). Point it to the `citation_info.csv` file generated in Step 1.
 
 This example creates a simple green map with 70% alpha and adds pins that scale in **color** and **size** based on the `log_rank` scale.
 
